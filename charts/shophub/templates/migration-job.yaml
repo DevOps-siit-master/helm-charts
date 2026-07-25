@@ -1,0 +1,62 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "shophub.fullname" . }}-migrate
+  labels:
+    {{- include "shophub.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 6
+  template:
+    metadata:
+      labels:
+        {{- include "shophub.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "shophub.serviceAccountName" . }}
+      initContainers:
+        - name: wait-for-db
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z "$DATABASE_HOST" "$DATABASE_PORT"; do sleep 2; done
+          env:
+            - name: DATABASE_HOST
+              value: "shophub-db-cluster-rw.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: DATABASE_PORT
+              value: "5432"
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - node
+            - node_modules/typeorm/cli.js
+            - migration:run
+            - -d
+            - dist/database/data-source.js
+          env:
+            - name: DATABASE_HOST
+              value: "shophub-db-cluster-rw.{{ .Release.Namespace }}.svc.cluster.local"
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: shophub-db-cluster-app
+                  key: dbname
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: shophub-db-cluster-app
+                  key: username
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: shophub-db-cluster-app
+                  key: password
