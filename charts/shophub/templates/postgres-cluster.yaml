@@ -1,0 +1,17 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: shophub-db-cluster
+spec:
+  instances: {{ .Values.postgres.instances }}
+
+  bootstrap:
+    initdb:
+      database: {{ .Values.postgres.databaseName }}
+      owner: {{ .Values.postgres.username }}
+
+  storage:
+    size: {{ .Values.postgres.storageSize }}
+    {{- if .Values.postgres.storageClass }}
+    storageClass: {{ .Values.postgres.storageClass | quote }}
+    {{- end }}
