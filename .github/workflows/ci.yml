@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  commitlint:
+    name: Lint commit messages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v6
+
+  lint-charts:
+    name: Lint & validate charts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: helm lint
+        run: |
+          for chart in charts/*/; do
+            echo "== helm lint $chart =="
+            helm lint "$chart"
+          done
+
+      - name: helm template (render check)
+        run: |
+          for chart in charts/*/; do
+            echo "== helm template $chart =="
+            helm template release "$chart" > /dev/null
+          done
+
+      - name: Validate rendered manifests (kubeconform)
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz \
+            | tar -xz kubeconform
+          for chart in charts/*/; do
+            echo "== kubeconform $chart =="
+            # -ignore-missing-schemas: CRD kinds (e.g. CNPG Cluster) have no
+            # published schema and are skipped rather than failing the build.
+            helm template release "$chart" \
+              | ./kubeconform -strict -ignore-missing-schemas -summary
+          done
