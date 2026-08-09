@@ -51,6 +51,35 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+shophub-api component: fully qualified name.
+*/}}
+{{- define "shophub.apiName" -}}
+{{- printf "%s-api" (include "shophub.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+shophub-api component: selector labels (distinct name so it never selects the
+auth-service pods and vice-versa).
+*/}}
+{{- define "shophub.apiSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "shophub.name" . }}-api
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: api
+{{- end }}
+
+{{/*
+shophub-api component: common labels.
+*/}}
+{{- define "shophub.apiLabels" -}}
+helm.sh/chart: {{ include "shophub.chart" . }}
+{{ include "shophub.apiSelectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "shophub.serviceAccountName" -}}

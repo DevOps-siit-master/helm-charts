@@ -78,6 +78,31 @@ affinity: {}
 
 httpRoute:
   enabled: false
+
+# shophub-api — the platform backend that manages shop sites by creating Shop /
+# Wallet / DiscordChannel custom resources (spec 1.2). Deployed as its own
+# component with a ServiceAccount + Role/RoleBinding scoped to the shop namespace.
+shophubApi:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: shophub-api
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 3001
+    # nodePort: 30081  # only used when service.type is NodePort
+  # Namespace the Shop/Wallet/DiscordChannel CRs are created in. The
+  # shop-operator must watch this namespace.
+  shopNamespace: shophub-shops
+  # Create the shop namespace as part of this release. Set false if it is
+  # managed elsewhere (e.g. by the shop-operator chart or GitOps).
+  createShopNamespace: true
+  # Template for a deployed shop's public URL; {name} is the Shop CR name.
+  shopUrlTemplate: "http://{name}.localhost"
+  resources: {}
+
 postgres:
   instances: 1
   databaseName: "shophub_auth"

@@ -1,0 +1,45 @@
+{{- if .Values.shophubApi.enabled -}}
+{{- $shopNs := .Values.shophubApi.shopNamespace -}}
+{{- if and .Values.shophubApi.createShopNamespace (ne $shopNs .Release.Namespace) }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $shopNs }}
+  labels:
+    {{- include "shophub.apiLabels" . | nindent 4 }}
+---
+{{- end }}
+# Role granting shophub-api CRUD over the shop-operator custom resources in the
+# namespace where shop sites are deployed (spec 1.2 — backend ↔ Kubernetes API).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "shophub.apiName" . }}
+  namespace: {{ $shopNs }}
+  labels:
+    {{- include "shophub.apiLabels" . | nindent 4 }}
+rules:
+  - apiGroups: ["shophub.devops-siit.io"]
+    resources: ["shops", "wallets", "discordchannels"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Read the CR status subresource the operator writes (ready/replicas).
+  - apiGroups: ["shophub.devops-siit.io"]
+    resources: ["shops/status", "wallets/status", "discordchannels/status"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "shophub.apiName" . }}
+  namespace: {{ $shopNs }}
+  labels:
+    {{- include "shophub.apiLabels" . | nindent 4 }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "shophub.apiName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "shophub.apiName" . }}
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}
