@@ -1,0 +1,50 @@
+{{- if .Values.shophubApi.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "shophub.apiName" . }}
+  labels:
+    {{- include "shophub.apiLabels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.shophubApi.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "shophub.apiSelectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "shophub.apiSelectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "shophub.apiName" . }}
+      containers:
+        - name: shophub-api
+          image: "{{ .Values.shophubApi.image.repository }}:{{ .Values.shophubApi.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.shophubApi.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.shophubApi.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+          resources:
+            {{- toYaml .Values.shophubApi.resources | nindent 12 }}
+          env:
+            - name: PORT
+              value: {{ .Values.shophubApi.service.port | quote }}
+            - name: SHOP_NAMESPACE
+              value: {{ .Values.shophubApi.shopNamespace | quote }}
+            - name: SHOP_URL_TEMPLATE
+              value: {{ .Values.shophubApi.shopUrlTemplate | quote }}
+            # Must match the auth service so its access tokens validate here.
+            - name: JWT_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.existingSecret }}
+                  key: jwt-access-secret
+{{- end }}
