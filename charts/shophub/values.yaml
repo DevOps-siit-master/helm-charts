@@ -103,6 +103,19 @@ shophubApi:
   shopUrlTemplate: "http://{name}.localhost"
   resources: {}
 
+# Grafana dashboard for ShopHub platform logs (spec 4.1). Provisioned as a
+# ConfigMap that the Grafana sidecar (from the prometheus-stack release, owned
+# by the observability work) auto-discovers by label. Queries Loki via the
+# datasource registered with uid "loki".
+grafanaDashboard:
+  enabled: true
+  # Label the Grafana sidecar watches for. kube-prometheus-stack defaults to
+  # `grafana_dashboard: "1"`; override if the sidecar is configured otherwise.
+  label: grafana_dashboard
+  labelValue: "1"
+  # e.g. { grafana_folder: ShopHub } to drop it into a named Grafana folder.
+  annotations: {}
+
 postgres:
   instances: 1
   databaseName: "shophub_auth"

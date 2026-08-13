@@ -1,0 +1,22 @@
+{{- if .Values.grafanaDashboard.enabled }}
+{{/*
+ShopHub platform log dashboard (spec 4.1). Wrapped in a ConfigMap that the
+Grafana sidecar — shipped with the prometheus-stack release owned by the
+observability work — auto-discovers by label and loads into Grafana. The
+dashboard queries Loki through the datasource registered with uid "loki".
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shophub.fullname" . }}-logs-dashboard
+  labels:
+    {{- include "shophub.labels" . | nindent 4 }}
+    {{ .Values.grafanaDashboard.label }}: {{ .Values.grafanaDashboard.labelValue | quote }}
+  {{- with .Values.grafanaDashboard.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  shophub-logs.json: |-
+{{ .Files.Get "dashboards/shophub-logs.json" | indent 4 }}
+{{- end }}
