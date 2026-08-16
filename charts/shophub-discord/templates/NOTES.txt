@@ -1,0 +1,7 @@
+DiscordChannel "{{ .Values.discordChannelObjectName }}" has been created in namespace {{ .Release.Namespace }}.
+
+Check reconciliation status:
+  kubectl get discordchannel {{ .Values.discordChannelObjectName }} -n {{ .Release.Namespace }} -o yaml
+
+Once ready, the webhook Secret will be available at:
+  {{ .Values.discordChannelObjectName }}-webhook (in this namespace)
