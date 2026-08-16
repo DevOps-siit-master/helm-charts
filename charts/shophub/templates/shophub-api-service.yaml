@@ -1,0 +1,20 @@
+{{- if .Values.shophubApi.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "shophub.apiName" . }}
+  labels:
+    {{- include "shophub.apiLabels" . | nindent 4 }}
+spec:
+  type: {{ .Values.shophubApi.service.type }}
+  ports:
+    - port: {{ .Values.shophubApi.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.shophubApi.service.type "NodePort") .Values.shophubApi.service.nodePort }}
+      nodePort: {{ .Values.shophubApi.service.nodePort }}
+      {{- end }}
+  selector:
+    {{- include "shophub.apiSelectorLabels" . | nindent 4 }}
+{{- end }}

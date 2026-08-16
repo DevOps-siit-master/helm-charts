@@ -78,6 +78,44 @@ affinity: {}
 
 httpRoute:
   enabled: false
+
+# shophub-api — the platform backend that manages shop sites by creating Shop /
+# Wallet / DiscordChannel custom resources (spec 1.2). Deployed as its own
+# component with a ServiceAccount + Role/RoleBinding scoped to the shop namespace.
+shophubApi:
+  enabled: true
+  replicaCount: 2
+  image:
+    repository: shophub-api
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 3001
+    # nodePort: 30081  # only used when service.type is NodePort
+  # Namespace the Shop/Wallet/DiscordChannel CRs are created in. The
+  # shop-operator must watch this namespace.
+  shopNamespace: shophub-shops
+  # Create the shop namespace as part of this release. Set false if it is
+  # managed elsewhere (e.g. by the shop-operator chart or GitOps).
+  createShopNamespace: true
+  # Template for a deployed shop's public URL; {name} is the Shop CR name.
+  shopUrlTemplate: "http://{name}.localhost"
+  resources: {}
+
+# Grafana dashboard for ShopHub platform logs (spec 4.1). Provisioned as a
+# ConfigMap that the Grafana sidecar (from the prometheus-stack release, owned
+# by the observability work) auto-discovers by label. Queries Loki via the
+# datasource registered with uid "loki".
+grafanaDashboard:
+  enabled: true
+  # Label the Grafana sidecar watches for. kube-prometheus-stack defaults to
+  # `grafana_dashboard: "1"`; override if the sidecar is configured otherwise.
+  label: grafana_dashboard
+  labelValue: "1"
+  # e.g. { grafana_folder: ShopHub } to drop it into a named Grafana folder.
+  annotations: {}
+
 postgres:
   instances: 1
   databaseName: "shophub_auth"
