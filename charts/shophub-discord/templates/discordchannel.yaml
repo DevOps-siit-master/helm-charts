@@ -1,0 +1,8 @@
+apiVersion: shophub.devops-siit.io/v1
+kind: DiscordChannel
+metadata:
+  name: {{ required "discordChannelObjectName is required" .Values.discordChannelObjectName }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  channelName: {{ required "discord.channelName is required" .Values.discord.channelName | quote }}
+  serverID: {{ required "discord.serverID is required" .Values.discord.serverID | quote }}
