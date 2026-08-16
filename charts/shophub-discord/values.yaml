@@ -1,4 +1,4 @@
-discordChannelObjectName: ""
+discordChannelObjectName: "discord-ops"
 discord:
-  channelName: ""
-  serverID: ""
+  channelName: "cluster-ops"
+  serverID: "1505279123801767956"
