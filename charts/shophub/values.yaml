@@ -122,6 +122,14 @@ frontend:
     port: 80
     nodePort: 30082
   resources: {}
+  # Pod- and container-level security contexts and scheduling controls. Empty
+  # by default (no-op); override to harden or pin the frontend pods. The image
+  # (nginxinc/nginx-unprivileged) already runs as a non-root user.
+  podSecurityContext: {}
+  securityContext: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
 # Grafana dashboard for ShopHub platform logs (spec 4.1). Provisioned as a
 # ConfigMap that the Grafana sidecar (from the prometheus-stack release, owned
