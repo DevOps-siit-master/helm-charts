@@ -103,6 +103,26 @@ shophubApi:
   shopUrlTemplate: "http://{name}.localhost"
   resources: {}
 
+# shophub-frontend — the admin web UI (spec 1.1 / 1.2). A static SPA served by
+# nginx; its config (frontend-configmap.yaml) same-origin-proxies /auth-api to
+# the auth-service and /shop-api to shophub-api, so the browser needs no CORS.
+# This is the entry point users hit to manage their shop sites.
+frontend:
+  enabled: true
+  # "standard" availability from spec 1.2 → 2 replicas for the platform UI.
+  replicaCount: 2
+  image:
+    repository: shophub-frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    # NodePort so the UI is reachable on the local kind cluster without an
+    # ingress controller. Users open http://<node-ip>:<nodePort>.
+    type: NodePort
+    port: 80
+    nodePort: 30082
+  resources: {}
+
 # Grafana dashboard for ShopHub platform logs (spec 4.1). Provisioned as a
 # ConfigMap that the Grafana sidecar (from the prometheus-stack release, owned
 # by the observability work) auto-discovers by label. Queries Loki via the
