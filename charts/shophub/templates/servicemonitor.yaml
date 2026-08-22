@@ -1,0 +1,47 @@
+{{- if and .Values.metrics.enabled .Values.metrics.serviceMonitor.enabled }}
+{{/*
+ServiceMonitors telling the prometheus-stack Prometheus to scrape the ShopHub
+platform services' /metrics (spec 3.3 / 4.1). Requires the monitoring.coreos.com
+CRDs from the prometheus-stack release; gated behind metrics.serviceMonitor.enabled
+so the chart still installs on clusters without that stack.
+*/}}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "shophub.fullname" . }}-auth
+  labels:
+    {{- include "shophub.labels" . | nindent 4 }}
+    {{- with .Values.metrics.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "shophub.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: {{ .Values.metrics.serviceMonitor.path }}
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+{{- if .Values.shophubApi.enabled }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "shophub.apiName" . }}
+  labels:
+    {{- include "shophub.apiLabels" . | nindent 4 }}
+    {{- with .Values.metrics.serviceMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "shophub.apiSelectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: {{ .Values.metrics.serviceMonitor.path }}
+      interval: {{ .Values.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+{{- end }}
+{{- end }}
