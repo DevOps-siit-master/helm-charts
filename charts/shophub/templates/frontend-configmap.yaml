@@ -1,0 +1,50 @@
+{{- if .Values.frontend.enabled -}}
+{{- $authPort := .Values.service.port -}}
+{{- $apiPort := .Values.shophubApi.service.port -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shophub.frontendName" . }}
+  labels:
+    {{- include "shophub.frontendLabels" . | nindent 4 }}
+data:
+  # nginx server config for the static SPA. It serves the built assets and
+  # same-origin-proxies the API paths to the in-cluster services, mirroring the
+  # Vite dev proxy (vite.config.ts): /auth-api and /shop-api are forwarded with
+  # the prefix stripped (proxy_pass trailing slash), so the browser never needs
+  # CORS. Overrides the image's default /etc/nginx/conf.d/default.conf.
+  default.conf: |
+    server {
+        listen       8080;
+        listen  [::]:8080;
+        server_name  _;
+
+        root   /usr/share/nginx/html;
+        index  index.html;
+
+        # Single-page app: fall back to index.html for client-side routes.
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+
+        # Proxy to the shophub-auth-service (registration / login / SIWE).
+        location /auth-api/ {
+            proxy_pass http://{{ include "shophub.fullname" . }}:{{ $authPort }}/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        # Proxy to the shophub-api (shop-site CRUD via Shop custom resources).
+        location /shop-api/ {
+            proxy_pass http://{{ include "shophub.apiName" . }}:{{ $apiPort }}/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+{{- end }}
