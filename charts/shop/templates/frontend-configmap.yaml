@@ -1,0 +1,27 @@
+{{- if .Values.frontend.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shop.frontendName" . }}
+  labels:
+    {{- include "shop.frontendLabels" . | nindent 4 }}
+data:
+  # nginx server config for the static SPA. Overrides the image's default
+  # /etc/nginx/conf.d/default.conf. The storefront is a client-side routed app
+  # (react-router: "/" and "/admin"), so unknown paths must fall back to
+  # index.html instead of 404-ing. Same-origin proxy locations for the order and
+  # payment services are added when those components join this chart.
+  default.conf: |
+    server {
+        listen       8080;
+        listen  [::]:8080;
+        server_name  _;
+
+        root   /usr/share/nginx/html;
+        index  index.html;
+
+        location / {
+            try_files $uri $uri/ /index.html;
+        }
+    }
+{{- end }}

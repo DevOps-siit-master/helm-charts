@@ -1,0 +1,9 @@
+Shop "{{ .Values.shopName }}" deployed with availability "{{ .Values.availability }}" ({{ include "shop.replicas" . }} replicas).
+
+Reach the storefront locally:
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "shop.frontendName" . }} 8080:{{ .Values.frontend.service.port }}
+  # then open http://127.0.0.1:8080
+
+The order and payment services, their database wiring and a per-shop Ingress
+are added in follow-up changes, so API calls from the storefront fail until then.
