@@ -1,0 +1,12 @@
+apiVersion: v2
+name: shop
+description: A Helm chart that deploys one Shop site (storefront, orders, payments) created through ShopHub
+type: application
+
+version: 0.1.0
+
+appVersion: "0.1.0"
+
+home: https://github.com/DevOps-siit-master/shop-frontend
+
+

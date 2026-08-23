@@ -1,0 +1,27 @@
+shopName: "demo-shop"
+
+availability: standard
+
+imageRegistry: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+frontend:
+  enabled: true
+  image:
+    repository: shop-frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 80
+  resources: {}
+  podSecurityContext: {}
+  securityContext: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+
