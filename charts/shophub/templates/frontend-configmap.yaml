@@ -37,6 +37,15 @@ data:
             proxy_set_header X-Forwarded-Proto $scheme;
         }
 
+        # Do not expose the shophub-api Prometheus metrics through the public
+        # edge. The prefix-strip below would otherwise map /shop-api/metrics to
+        # the backend's unauthenticated /metrics, reachable from outside via the
+        # NodePort. Prometheus scrapes the backend in-cluster (ServiceMonitor),
+        # so the edge never needs this path. Exact-match wins over the prefix.
+        location = /shop-api/metrics {
+            return 404;
+        }
+
         # Proxy to the shophub-api (shop-site CRUD via Shop custom resources).
         location /shop-api/ {
             proxy_pass http://{{ include "shophub.apiName" . }}:{{ $apiPort }}/;
