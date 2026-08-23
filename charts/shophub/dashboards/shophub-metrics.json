@@ -224,7 +224,7 @@
     {
       "id": 8,
       "type": "table",
-      "title": "Top 404 endpoints (24h)",
+      "title": "Top routes returning 404 (24h)",
       "datasource": { "type": "prometheus", "uid": "${datasource}" },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
       "fieldConfig": {
@@ -247,7 +247,7 @@
           "id": "organize",
           "options": {
             "excludeByName": { "Time": true },
-            "renameByName": { "route": "Endpoint", "Value": "404s (24h)" }
+            "renameByName": { "route": "Route", "Value": "404s (24h)" }
           }
         }
       ]

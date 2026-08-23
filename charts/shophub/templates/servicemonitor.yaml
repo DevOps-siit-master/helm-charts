@@ -5,6 +5,8 @@ platform services' /metrics (spec 3.3 / 4.1). Requires the monitoring.coreos.com
 CRDs from the prometheus-stack release; gated behind metrics.serviceMonitor.enabled
 so the chart still installs on clusters without that stack.
 */}}
+{{- if .Values.metrics.serviceMonitor.auth.enabled }}
+---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -23,6 +25,7 @@ spec:
       path: {{ .Values.metrics.serviceMonitor.path }}
       interval: {{ .Values.metrics.serviceMonitor.interval }}
       scrapeTimeout: {{ .Values.metrics.serviceMonitor.scrapeTimeout }}
+{{- end }}
 {{- if .Values.shophubApi.enabled }}
 ---
 apiVersion: monitoring.coreos.com/v1

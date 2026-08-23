@@ -129,6 +129,12 @@ metrics:
     path: /metrics
     interval: 30s
     scrapeTimeout: 10s
+    # Whether to scrape the auth service too. Off by default: shophub-auth-service
+    # exposes no /metrics endpoint yet, so a ServiceMonitor for it would sit
+    # permanently DOWN in Prometheus. Flip to true only once the auth service
+    # actually serves metrics.
+    auth:
+      enabled: false
     # Extra labels so the prometheus-stack Prometheus selects this monitor.
     # kube-prometheus-stack commonly needs `release: <prometheus-release>`.
     labels: {}
