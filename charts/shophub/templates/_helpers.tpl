@@ -80,6 +80,35 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end }}
 
 {{/*
+shophub-frontend component: fully qualified name.
+*/}}
+{{- define "shophub.frontendName" -}}
+{{- printf "%s-frontend" (include "shophub.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+shophub-frontend component: selector labels (distinct name so it never selects
+the auth-service or api pods and vice-versa).
+*/}}
+{{- define "shophub.frontendSelectorLabels" -}}
+app.kubernetes.io/name: {{ include "shophub.name" . }}-frontend
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: frontend
+{{- end }}
+
+{{/*
+shophub-frontend component: common labels.
+*/}}
+{{- define "shophub.frontendLabels" -}}
+helm.sh/chart: {{ include "shophub.chart" . }}
+{{ include "shophub.frontendSelectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "shophub.serviceAccountName" -}}
