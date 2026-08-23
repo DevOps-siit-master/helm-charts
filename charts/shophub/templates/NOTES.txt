@@ -1,4 +1,20 @@
-1. Get the application URL by running these commands:
+{{- if .Values.frontend.enabled }}
+The ShopHub admin UI (shophub-frontend) is the entry point. It serves the SPA
+and proxies /auth-api and /shop-api to the backend services.
+{{- if and (contains "NodePort" .Values.frontend.service.type) .Values.frontend.service.nodePort }}
+
+  export FE_NODE_PORT={{ .Values.frontend.service.nodePort }}
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "Open the ShopHub UI at http://$NODE_IP:$FE_NODE_PORT"
+{{- else }}
+
+  kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "shophub.frontendName" . }} 8080:{{ .Values.frontend.service.port }}
+  echo "Open the ShopHub UI at http://127.0.0.1:8080"
+{{- end }}
+
+--------------------------------------------------------------------------------
+{{- end }}
+1. Get the backend (auth-service) URL by running these commands:
 {{- if .Values.httpRoute.enabled }}
 {{- if .Values.httpRoute.hostnames }}
     export APP_HOSTNAME={{ .Values.httpRoute.hostnames | first }}
