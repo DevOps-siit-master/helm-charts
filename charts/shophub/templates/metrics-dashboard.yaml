@@ -1,0 +1,24 @@
+{{- if and .Values.metrics.enabled .Values.metrics.dashboard.enabled }}
+{{/*
+ShopHub platform metrics dashboard (spec 4.1). Wrapped in a ConfigMap that the
+Grafana sidecar — shipped with the prometheus-stack release owned by the
+observability work — auto-discovers by label and loads into Grafana. Queries the
+Prometheus datasource (selected via the dashboard's datasource variable) for the
+http_requests_total / http_request_duration_seconds metrics exposed by the
+shophub-api and auth services, plus their prom-client process metrics.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "shophub.fullname" . }}-metrics-dashboard
+  labels:
+    {{- include "shophub.labels" . | nindent 4 }}
+    {{ .Values.metrics.dashboard.label }}: {{ .Values.metrics.dashboard.labelValue | quote }}
+  {{- with .Values.metrics.dashboard.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  shophub-metrics.json: |-
+{{ .Files.Get "dashboards/shophub-metrics.json" | indent 4 }}
+{{- end }}
