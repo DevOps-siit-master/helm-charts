@@ -19,16 +19,22 @@ serviceAccount:
 podAnnotations: {}
 podLabels: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+# Hardened defaults (image runs as non-root `USER node`). readOnlyRootFilesystem
+# is intentionally left off — the app/init need a writable / and it requires
+# per-path emptyDir mounts; the KSV0014 check is accepted in .trivyignore.
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
 
 service:
   type: NodePort
@@ -102,6 +108,19 @@ shophubApi:
   # Template for a deployed shop's public URL; {name} is the Shop CR name.
   shopUrlTemplate: "http://{name}.localhost"
   resources: {}
+  # Hardened defaults (image runs as non-root `USER node`).
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
 
 # shophub-frontend — the admin web UI (spec 1.1 / 1.2). A static SPA served by
 # nginx; its config (frontend-configmap.yaml) same-origin-proxies /auth-api to
@@ -122,11 +141,20 @@ frontend:
     port: 80
     nodePort: 30082
   resources: {}
-  # Pod- and container-level security contexts and scheduling controls. Empty
-  # by default (no-op); override to harden or pin the frontend pods. The image
-  # (nginxinc/nginx-unprivileged) already runs as a non-root user.
-  podSecurityContext: {}
-  securityContext: {}
+  # Pod- and container-level security contexts. The nginx image runs as a
+  # non-root user and listens on 8080, so non-root enforcement is safe.
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
   nodeSelector: {}
   tolerations: []
   affinity: {}
