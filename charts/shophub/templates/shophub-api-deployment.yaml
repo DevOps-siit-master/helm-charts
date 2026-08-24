@@ -16,10 +16,14 @@ spec:
         {{- include "shophub.apiSelectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "shophub.apiName" . }}
+      securityContext:
+        {{- toYaml .Values.shophubApi.podSecurityContext | nindent 8 }}
       containers:
         - name: shophub-api
           image: "{{ .Values.shophubApi.image.repository }}:{{ .Values.shophubApi.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.shophubApi.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.shophubApi.securityContext | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.shophubApi.service.port }}

@@ -15,11 +15,24 @@ spec:
         {{- include "shophub.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "shophub.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         # Block startup until the CNPG database accepts TCP connections, so the
         # app doesn't crash-loop while the cluster is still bootstrapping.
         - name: wait-for-db
           image: busybox:1.36
+          # busybox defaults to root, so pin a non-root uid to satisfy
+          # runAsNonRoot; `nc` works fine as nobody.
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 65534
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
           command:
             - sh
             - -c
@@ -36,6 +49,8 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
