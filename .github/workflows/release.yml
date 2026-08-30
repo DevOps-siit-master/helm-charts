@@ -25,9 +25,13 @@ jobs:
       - name: Package and publish charts
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p .packages
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          registry="oci://ghcr.io/${owner}/charts"
+
           for chart in charts/*/; do
             echo "== publish $chart =="
             package=$(helm package "$chart" --destination .packages | awk '{print $NF}')
-            helm push "$package" oci://ghcr.io/${{ github.repository_owner }}/charts
+            helm push "$package" "$registry"
           done
