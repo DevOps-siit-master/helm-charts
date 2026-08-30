@@ -1,0 +1,18 @@
+# Accepted IaC misconfiguration findings (Trivy). Reviewed and intentionally
+# deferred; re-evaluate when the charts gain writable-volume plumbing.
+
+# KSV0014 — Container should set securityContext.readOnlyRootFilesystem to true.
+# Deferred: a read-only root FS requires per-path writable emptyDir mounts
+# (nginx writes /var/cache/nginx and /var/run; the Node apps write /tmp). The
+# risk is mitigated by runAsNonRoot, allowPrivilegeEscalation: false, and
+# dropping ALL capabilities, which are enforced on every container.
+KSV0014
+AVD-KSV-0014
+
+# The operator reconciles Shop resources across namespaces and must manage
+# their generated Secrets and Services. These permissions cannot be replaced
+# with a single namespaced Role without breaking reconciliation.
+KSV-0041
+AVD-KSV-0041
+KSV-0056
+AVD-KSV-0056

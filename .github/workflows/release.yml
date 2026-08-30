@@ -1,0 +1,37 @@
+name: Publish Helm charts
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: Publish charts to GHCR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Package and publish charts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .packages
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          registry="oci://ghcr.io/${owner}/charts"
+
+          for chart in charts/*/; do
+            echo "== publish $chart =="
+            package=$(helm package "$chart" --destination .packages | awk '{print $NF}')
+            helm push "$package" "$registry"
+          done

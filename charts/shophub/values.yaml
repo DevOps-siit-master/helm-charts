@@ -19,16 +19,22 @@ serviceAccount:
 podAnnotations: {}
 podLabels: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+# Hardened defaults (image runs as non-root `USER node`). readOnlyRootFilesystem
+# is intentionally left off — the app/init need a writable / and it requires
+# per-path emptyDir mounts; the KSV0014 check is accepted in .trivyignore.
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
 
 service:
   type: NodePort
@@ -102,6 +108,56 @@ shophubApi:
   # Template for a deployed shop's public URL; {name} is the Shop CR name.
   shopUrlTemplate: "http://{name}.localhost"
   resources: {}
+  # Hardened defaults (image runs as non-root `USER node`).
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+# shophub-frontend — the admin web UI (spec 1.1 / 1.2). A static SPA served by
+# nginx; its config (frontend-configmap.yaml) same-origin-proxies /auth-api to
+# the auth-service and /shop-api to shophub-api, so the browser needs no CORS.
+# This is the entry point users hit to manage their shop sites.
+frontend:
+  enabled: true
+  # "standard" availability from spec 1.2 → 2 replicas for the platform UI.
+  replicaCount: 2
+  image:
+    repository: shophub-frontend
+    pullPolicy: IfNotPresent
+    tag: "latest"
+  service:
+    # NodePort so the UI is reachable on the local kind cluster without an
+    # ingress controller. Users open http://<node-ip>:<nodePort>.
+    type: NodePort
+    port: 80
+    nodePort: 30082
+  resources: {}
+  # Pod- and container-level security contexts. The nginx image runs as a
+  # non-root user and listens on 8080, so non-root enforcement is safe.
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
 
 # Grafana dashboard for ShopHub platform logs (spec 4.1). Provisioned as a
 # ConfigMap that the Grafana sidecar (from the prometheus-stack release, owned
@@ -115,6 +171,35 @@ grafanaDashboard:
   labelValue: "1"
   # e.g. { grafana_folder: ShopHub } to drop it into a named Grafana folder.
   annotations: {}
+
+# Prometheus metrics integration (spec 3.3 / 4.1). The shophub-api and auth
+# service expose Prometheus metrics on /metrics (same http port). A ServiceMonitor
+# points the prometheus-stack Prometheus at them.
+metrics:
+  enabled: true
+  serviceMonitor:
+    # Opt-in: needs the monitoring.coreos.com CRDs shipped with the
+    # prometheus-stack release. Leave false until that stack is installed (then
+    # enable from kube-state), so the chart still installs on a bare cluster.
+    enabled: false
+    path: /metrics
+    interval: 30s
+    scrapeTimeout: 10s
+    # Whether to scrape the auth service too. Off by default: shophub-auth-service
+    # exposes no /metrics endpoint yet, so a ServiceMonitor for it would sit
+    # permanently DOWN in Prometheus. Flip to true only once the auth service
+    # actually serves metrics.
+    auth:
+      enabled: false
+    # Extra labels so the prometheus-stack Prometheus selects this monitor.
+    # kube-prometheus-stack commonly needs `release: <prometheus-release>`.
+    labels: {}
+  # Grafana metrics dashboard, provisioned like the logs one (sidecar-discovered).
+  dashboard:
+    enabled: true
+    label: grafana_dashboard
+    labelValue: "1"
+    annotations: {}
 
 postgres:
   instances: 1

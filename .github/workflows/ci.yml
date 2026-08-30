@@ -56,3 +56,36 @@ jobs:
             helm template release "$chart" \
               | ./kubeconform -strict -ignore-missing-schemas -summary
           done
+
+  security:
+    name: Security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Verified secrets accidentally committed to the chart repo (values,
+      # dashboards, etc.). Diff-scoped on PRs; --only-verified avoids noise.
+      - name: Secret scan (TruffleHog)
+        if: github.event_name == 'pull_request'
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+      # IaC misconfiguration scan. Trivy renders the Helm charts and checks the
+      # resulting Kubernetes manifests for security issues (privileged
+      # containers, missing securityContext, hostPath mounts, etc.). Gated at
+      # CRITICAL,HIGH to keep the signal high; add a .trivyignore for reviewed
+      # findings that are intentionally accepted.
+      - name: IaC misconfig scan (Trivy)
+        uses: aquasecurity/trivy-action@0.35.0
+        with:
+          scan-type: fs
+          scanners: misconfig
+          scan-ref: charts/
+          exit-code: '1'
+          severity: CRITICAL,HIGH
