@@ -56,6 +56,20 @@ spec:
               value: {{ .Values.discord.secretNamespace | quote }}
             - name: DISCORD_API_URL
               value: {{ .Values.discord.api| quote }}
+            - name: SHOP_AUTH_IMAGE
+              value: {{ .Values.images.auth }}
+            - name: SHOP_ORDER_IMAGE
+              value: {{ .Values.images.order }}
+            - name: SHOP_PAYMENT_IMAGE
+              value: {{ .Values.images.payment }}
+            - name: SHOP_FRONTEND_IMAGE
+              value: {{ .Values.images.frontend }}
+            - name: SHOP_IMAGE_PULL_POLICY
+              value: {{ .Values.imagePullPolicy }}
+            - name: USDT_ADDRESS
+              value: {{ .Values.payment.usdtAddress | quote }}
+            - name: SEPOLIA_RPC_URL
+              value: {{ .Values.payment.sepoliaRpcUrl | quote }}
           {{- with .Values.volumeMounts }}
           volumeMounts:
             {{- toYaml . | nindent 12 }}

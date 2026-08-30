@@ -86,3 +86,14 @@ discord:
   secretName: "discord-bot-credentials"
   secretNamespace: "shop-operator-system"
   api: "https://discord.com/api/v10"
+
+payment:
+  usdtAddress: ""
+  sepoliaRpcUrl: "https://sepolia.drpc.org"
+
+images:
+  auth: ghcr.io/devops-siit-master/shophub-auth-service:dev
+  order: ghcr.io/devops-siit-master/shophub-order-service:dev
+  payment: ghcr.io/devops-siit-master/shophub-payment-service:dev
+  frontend: ghcr.io/devops-siit-master/shophub-frontend:dev
+imagePullPolicy: IfNotPresent
