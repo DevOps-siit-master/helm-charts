@@ -8,3 +8,11 @@
 # dropping ALL capabilities, which are enforced on every container.
 KSV0014
 AVD-KSV-0014
+
+# The operator reconciles Shop resources across namespaces and must manage
+# their generated Secrets and Services. These permissions cannot be replaced
+# with a single namespaced Role without breaking reconciliation.
+KSV-0041
+AVD-KSV-0041
+KSV-0056
+AVD-KSV-0056
