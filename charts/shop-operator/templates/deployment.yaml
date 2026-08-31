@@ -62,6 +62,8 @@ spec:
               value: {{ .Values.images.order }}
             - name: SHOP_PAYMENT_IMAGE
               value: {{ .Values.images.payment }}
+            - name: SHOP_INVENTORY_IMAGE
+              value: {{ .Values.images.inventory }}
             - name: SHOP_FRONTEND_IMAGE
               value: {{ .Values.images.frontend }}
             - name: SHOP_IMAGE_PULL_POLICY
